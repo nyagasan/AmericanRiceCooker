@@ -9,7 +9,7 @@ int mage; // まげセンサーの値
 void setup() {
    println(Serial.list());
 size(480, 240);
-player = minim.loadFile("open.mp3");
+player = minim.loadFile("openSuihan.wav");
 // player = minim.loadFile("close.mp3");
 
 // arduino settings
@@ -20,13 +20,14 @@ myPort = new Serial(this, "/dev/tty.usbmodem101", 9600);
 }
 
 boolean isPlaying = false;
+int isOpened = 20;
 
 void draw() {
-  if (mage > 20 && !isPlaying) {
+  if (mage > isOpened && !isPlaying) {
     player.play();
     isPlaying = true;
     println("再生");
-  } else if (mage <= 20 && isPlaying) {
+  } else if (mage <= isOpened && isPlaying) {
     player.pause();
     player.rewind();
     isPlaying = false;
