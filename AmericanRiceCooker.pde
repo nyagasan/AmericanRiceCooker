@@ -11,7 +11,6 @@ Serial myPort;
 int mageValue; // まげセンサーの値
 
 // 状態管理用の変数
-boolean isPlaying = false;
 final int OPEN_THRESHOLD = 100; // センサー値のしきい値
 
 void setup() {
@@ -35,38 +34,56 @@ void setup() {
 }
 
 void draw() {
-  if (mageValue < OPEN_THRESHOLD && !isPlaying) {
+  boolean anyPlaying = false;
+
+  if (mageValue < OPEN_THRESHOLD && !isAnyOpenPlayerPlaying()) {
     playRandomOpenSound();
-  } else if (mageValue >= OPEN_THRESHOLD && isPlaying) {
-    stopAllOpenSounds();
   }
   
-  if (mageValue >= OPEN_THRESHOLD && !isPlaying) {
-    closedPlayer.play();
-    println("再生2: " + mageValue);
-  } else if (mageValue < OPEN_THRESHOLD && isPlaying) {
-    closedPlayer.pause();
+  if (mageValue >= OPEN_THRESHOLD && !closedPlayer.isPlaying()) {
     closedPlayer.rewind();
-    println("停止2: " + mageValue);
+    closedPlayer.play();
   }
+
+  // 再生状態の確認
+  for (AudioPlayer player : openedPlayers) {
+    if (player.isPlaying()) {
+      anyPlaying = true;
+      break;
+    }
+  }
+  if (closedPlayer.isPlaying()) {
+    anyPlaying = true;
+  }
+
+  // LEDの制御
+  sendLEDCommand(anyPlaying);
 }
 
 // ランダムなオープンサウンドを再生
 void playRandomOpenSound() {
   int playerIndex = int(random(openedPlayers.length));
+  openedPlayers[playerIndex].rewind();
   openedPlayers[playerIndex].play();
-  isPlaying = true;
-  println("再生: " + mageValue + ", プレイヤー: " + (playerIndex + 1));
 }
 
-// すべてのオープンサウンドを停止
-void stopAllOpenSounds() {
+// いずれかのオープンプレイヤーが再生中かチェック
+boolean isAnyOpenPlayerPlaying() {
   for (AudioPlayer player : openedPlayers) {
-    player.pause();
-    player.rewind();
+    if (player.isPlaying()) {
+      return true;
+    }
   }
-  isPlaying = false;
-  println("停止: " + mageValue);
+  return false;
+}
+
+// LEDコマンドをArduinoに送信
+void sendLEDCommand(boolean turnOn) {
+  if (turnOn) {
+    myPort.write('1');
+  } else {
+    myPort.write('0');
+  }
 }
 
 void stop() {
