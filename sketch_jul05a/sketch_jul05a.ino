@@ -1,18 +1,31 @@
-int val = 0;
-int teikou;
+const int SENSOR_PIN = A0;
+const int LED_PIN = 11;
+const int THRESHOLD = 100;
+const int DELAY_TIME = 100;
 
 void setup() {
   Serial.begin(9600);
-  pinMode(11, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
 }
 
 void loop() {
-  val = analogRead(0);
-  digitalWrite(11, LOW); //LED消灯
-  teikou = map(val, 0, 1023, 0, 255);
-  Serial.println(teikou); //シリアルモニタで抵抗の値を見られるように
-  if (teikou > 20) { //抵抗の値が 20より大きければ
-    digitalWrite(11, HIGH); //LED 点灯
+  int sensorValue = analogRead(SENSOR_PIN);
+  int resistanceValue = map(sensorValue, 0, 1023, 0, 255);
+  
+  Serial.println(resistanceValue); // シリアルモニタで抵抗の値を表示
+  
+  digitalWrite(LED_PIN, LOW); // LEDを消灯
+  
+  if (resistanceValue < THRESHOLD) {
+    blinkLED();
   }
-  delay(100); // データ送信の間隔を設定
+  
+  delay(DELAY_TIME); // データ送信の間隔を設定
+}
+
+void blinkLED() {
+  digitalWrite(LED_PIN, HIGH);
+  delay(DELAY_TIME);
+  digitalWrite(LED_PIN, LOW);
+  delay(DELAY_TIME);
 }
