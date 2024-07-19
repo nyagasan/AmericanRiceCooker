@@ -12,6 +12,7 @@ int mageValue; // まげセンサーの値
 
 // 状態管理用の変数
 final int OPEN_THRESHOLD = 100; // センサー値のしきい値
+boolean wasOpen = false; // 前回のフレームで開いていたかどうか
 
 void setup() {
   size(480, 240);
@@ -34,13 +35,15 @@ void setup() {
 }
 
 void draw() {
+  boolean isOpen = mageValue < OPEN_THRESHOLD;
   boolean anyPlaying = false;
 
-  if (mageValue < OPEN_THRESHOLD && !isAnyOpenPlayerPlaying()) {
+  // 開閉状態の変化を検出
+  if (isOpen && !wasOpen) {
+    stopAllSounds();
     playRandomOpenSound();
-  }
-  
-  if (mageValue >= OPEN_THRESHOLD && !closedPlayer.isPlaying()) {
+  } else if (!isOpen && wasOpen) {
+    stopAllSounds();
     closedPlayer.rewind();
     closedPlayer.play();
   }
@@ -58,6 +61,8 @@ void draw() {
 
   // LEDの制御
   sendLEDCommand(anyPlaying);
+
+  wasOpen = isOpen;
 }
 
 // ランダムなオープンサウンドを再生
@@ -67,14 +72,14 @@ void playRandomOpenSound() {
   openedPlayers[playerIndex].play();
 }
 
-// いずれかのオープンプレイヤーが再生中かチェック
-boolean isAnyOpenPlayerPlaying() {
+// すべての音を停止
+void stopAllSounds() {
   for (AudioPlayer player : openedPlayers) {
-    if (player.isPlaying()) {
-      return true;
-    }
+    player.pause();
+    player.rewind();
   }
-  return false;
+  closedPlayer.pause();
+  closedPlayer.rewind();
 }
 
 // LEDコマンドをArduinoに送信
